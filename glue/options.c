@@ -205,5 +205,18 @@ gowhatsapp_add_account_options(GList *account_options)
         );
     account_options = g_list_append(account_options, option);
 
+    {
+        GList *choices = NULL;
+        choices = add_choice(choices, "Off", GOWHATSAPP_MULTIMESSAGE_CONVERSION_CHOICE_OFF);
+        choices = add_choice(choices, "Pipe (join with |)", GOWHATSAPP_MULTIMESSAGE_CONVERSION_CHOICE_PIPE);
+        choices = add_choice(choices, "Multiple messages", GOWHATSAPP_MULTIMESSAGE_CONVERSION_CHOICE_MULTIMESSAGE);
+        option = purple_account_option_list_new( // MEMCHECK: account_options takes ownership
+            "Multiline message conversion (for bridges)",
+            GOWHATSAPP_MULTIMESSAGE_CONVERSION_OPTION,
+            choices
+        );
+        account_options = g_list_append(account_options, option);
+    }
+
     return account_options;
 }

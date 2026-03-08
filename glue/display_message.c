@@ -45,46 +45,52 @@ void gowhatsapp_display_text_message(
         flags |= PURPLE_MESSAGE_RECV;
     }
 
-    // WhatsApp is a plain-text protocol, but Pidgin expects HTML
-    gchar * escaped_text = NULL;
-    if (escape) { // sometimes, text is already escaped
-        gchar * html = purple_markup_escape_text(text, -1); // converts to HTML except the line breakes
-        escaped_text = purple_strdup_withhtml(html); // converts newline characters to HTML br tags
-        g_free(html);
-    } else {
-        escaped_text = g_strdup(text); // MEMCHECK: released here (see below)
-    }
+    const char *multimessage_opt = purple_account_get_string(account, GOWHATSAPP_MULTIMESSAGE_CONVERSION_OPTION, GOWHATSAPP_MULTIMESSAGE_CONVERSION_CHOICE_OFF);
+    GArray *pieces = g_array_new(FALSE, FALSE, sizeof(gchar *));
+    gowhatsapp_multimessage_apply(multimessage_opt, text, pieces);
 
-    // add message ID to visible text
-    // for https://github.com/Juliaria08 in https://github.com/hoehermann/purple-gowhatsapp/issues/206
-    gchar * text_with_id = NULL;
-    if (purple_account_get_bool(account, GOWHATSAPP_DISPLAY_MESSAGE_ID_OPTION, FALSE) && messageId != NULL) {
-        text_with_id = g_strdup_printf("%s <span lang=\"id\">%s</span>", escaped_text, messageId); // MEMCHECK: released here (see below)
-    } else {
-        text_with_id = g_strdup(escaped_text); // MEMCHECK: released here (see below)
-    }
+    for (guint i = 0; i < pieces->len; i++) {
+        gchar *piece = g_array_index(pieces, gchar *, i);
 
-    g_free(escaped_text);
-    
-    if (isGroup) {
-        gowhatsapp_enter_group_chat(connection, remoteJid, NULL);
-        purple_serv_got_chat_in(connection, g_str_hash(remoteJid), senderJid, flags, text_with_id, timestamp);
-    } else {
-        if (flags & PURPLE_MESSAGE_SEND) {
-            // display message sent from own account (other device as well as local echo)
-            // cannot use purple_serv_got_im since it sets the flag PURPLE_MESSAGE_RECV
-            PurpleConversation *conv = purple_find_conversation_with_account(PURPLE_CONV_TYPE_IM, remoteJid, account);
-            if (conv == NULL) {
-                conv = purple_conversation_new(PURPLE_CONV_TYPE_IM, account, remoteJid); // MEMCHECK: caller takes ownership
-            }
-            purple_conv_im_write(purple_conversation_get_im_data(conv), remoteJid, text_with_id, flags, timestamp);
+        // WhatsApp is a plain-text protocol, but Pidgin expects HTML
+        gchar * escaped_text = NULL;
+        if (escape) {
+            gchar * html = purple_markup_escape_text(piece, -1);
+            escaped_text = purple_strdup_withhtml(html);
+            g_free(html);
         } else {
-            if (purple_account_get_bool(account, GOWHATSAPP_UPDATE_BUDDY_ON_MESSAGE_OPTION, TRUE)) {
-                gowhatsapp_ensure_buddy_in_blist(account, remoteJid, name);
-            }
-            purple_serv_got_im(connection, remoteJid, text_with_id, flags, timestamp);
+            escaped_text = g_strdup(piece);
         }
+
+        gchar * text_with_id = NULL;
+        if (purple_account_get_bool(account, GOWHATSAPP_DISPLAY_MESSAGE_ID_OPTION, FALSE) && messageId != NULL && i == 0) {
+            text_with_id = g_strdup_printf("%s <span lang=\"id\">%s</span>", escaped_text, messageId);
+        } else {
+            text_with_id = g_strdup(escaped_text);
+        }
+
+        g_free(escaped_text);
+        
+        if (isGroup) {
+            gowhatsapp_enter_group_chat(connection, remoteJid, NULL);
+            purple_serv_got_chat_in(connection, g_str_hash(remoteJid), senderJid, flags, text_with_id, timestamp);
+        } else {
+            if (flags & PURPLE_MESSAGE_SEND) {
+                PurpleConversation *conv = purple_find_conversation_with_account(PURPLE_CONV_TYPE_IM, remoteJid, account);
+                if (conv == NULL) {
+                    conv = purple_conversation_new(PURPLE_CONV_TYPE_IM, account, remoteJid);
+                }
+                purple_conv_im_write(purple_conversation_get_im_data(conv), remoteJid, text_with_id, flags, timestamp);
+            } else {
+                if (purple_account_get_bool(account, GOWHATSAPP_UPDATE_BUDDY_ON_MESSAGE_OPTION, TRUE)) {
+                    gowhatsapp_ensure_buddy_in_blist(account, remoteJid, name);
+                }
+                purple_serv_got_im(connection, remoteJid, text_with_id, flags, timestamp);
+            }
+        }
+        
+        g_free(text_with_id);
+        g_free(piece);
     }
-    
-    g_free(text_with_id);
+    g_array_free(pieces, FALSE);
 }

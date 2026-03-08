@@ -8,6 +8,7 @@ add_library(${TARGET_NAME} SHARED
     "../bridge.c" # this needs to be compiled again since go's c-archive mode does not include the C object
     "../bridge.h"
     "process_message.c"
+    "multimessage.c"
     "display_message.c"
     "groups.c"
     "blist.c"
