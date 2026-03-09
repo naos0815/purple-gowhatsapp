@@ -8,11 +8,11 @@
  * pipe: one piece (newlines replaced by |).
  * multimessage: one piece per line (CRLF/CR/LF normalized to line breaks).
  */
-void gowhatsapp_multimessage_apply(const char *option_value, const char *text, GArray *out_pieces)
+void gowhatsapp_multiline_apply(const char *option_value, const char *text, GArray *out_pieces)
 {
     if (!text)
         text = "";
-    if (!option_value || strcmp(option_value, GOWHATSAPP_MULTIMESSAGE_CONVERSION_CHOICE_OFF) == 0) {
+    if (!option_value || strcmp(option_value, GOWHATSAPP_MULTILINE_CONVERSION_CHOICE_OFF) == 0) {
         gchar *dup = g_strdup(text);
         g_array_append_val(out_pieces, dup);
         return;
@@ -33,7 +33,7 @@ void gowhatsapp_multimessage_apply(const char *option_value, const char *text, G
     }
     const char *n = norm->str;
 
-    if (strcmp(option_value, GOWHATSAPP_MULTIMESSAGE_CONVERSION_CHOICE_PIPE) == 0) {
+    if (strcmp(option_value, GOWHATSAPP_MULTILINE_CONVERSION_CHOICE_PIPE) == 0) {
         gchar *pipe_str = g_strdup(n);
         for (char *q = pipe_str; *q; q++)
             if (*q == '\n')
@@ -42,7 +42,7 @@ void gowhatsapp_multimessage_apply(const char *option_value, const char *text, G
         g_string_free(norm, TRUE);
         return;
     }
-    if (strcmp(option_value, GOWHATSAPP_MULTIMESSAGE_CONVERSION_CHOICE_MULTIMESSAGE) == 0) {
+    if (strcmp(option_value, GOWHATSAPP_MULTILINE_CONVERSION_CHOICE_MULTIMESSAGE) == 0) {
         gchar **lines = g_strsplit(n, "\n", -1);
         for (gchar **line = lines; *line; line++) {
             gchar *dup = g_strdup(*line);

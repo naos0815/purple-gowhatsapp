@@ -102,7 +102,7 @@
 * `display-message-id` bool  
   If set to true, the ID of a text message will be appended to the displayed text. For outgoing messages, this only has effect if `echo-sent-messages` is set to `on-success`.
 
-* `multimessage-conversion` string choice  
+* `multiline-conversion` string choice  
   For bridges (e.g. Bitlbee) where a line break ends a message: `off` (default) keep current behaviour; `pipe` join lines with `|` into one message; `multimessage` send one message per line.
 
 * `autojoin-chats` bool  

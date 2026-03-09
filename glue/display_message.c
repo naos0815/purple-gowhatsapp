@@ -45,9 +45,9 @@ void gowhatsapp_display_text_message(
         flags |= PURPLE_MESSAGE_RECV;
     }
 
-    const char *multimessage_opt = purple_account_get_string(account, GOWHATSAPP_MULTIMESSAGE_CONVERSION_OPTION, GOWHATSAPP_MULTIMESSAGE_CONVERSION_CHOICE_OFF);
+    const char *multiline_opt = purple_account_get_string(account, GOWHATSAPP_MULTILINE_CONVERSION_OPTION, GOWHATSAPP_MULTILINE_CONVERSION_CHOICE_OFF);
     GArray *pieces = g_array_new(FALSE, FALSE, sizeof(gchar *));
-    gowhatsapp_multimessage_apply(multimessage_opt, text, pieces);
+    gowhatsapp_multiline_apply(multiline_opt, text, pieces);
 
     for (guint i = 0; i < pieces->len; i++) {
         gchar *piece = g_array_index(pieces, gchar *, i);
